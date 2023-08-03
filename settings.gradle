@@ -1,0 +1,4 @@
+rootProject.name = 'responscore'
+
+include 'responscore-core'
+include 'responscore-api'
