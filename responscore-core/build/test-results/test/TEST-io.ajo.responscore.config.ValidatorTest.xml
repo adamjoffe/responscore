@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.ajo.responscore.config.ValidatorTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2023-09-22T11:32:20" hostname="LAPTOP-H9ON8S1N" time="0.207">
+  <properties/>
+  <testcase name="Invalid MaxSize Validator" classname="io.ajo.responscore.config.ValidatorTest" time="0.207"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[Sep 22, 2023 9:32:19 PM org.hibernate.validator.internal.util.Version <clinit>
+INFO: HV000001: Hibernate Validator 6.2.5.Final
+]]></system-err>
+</testsuite>
