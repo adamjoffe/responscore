@@ -21,6 +21,9 @@ import java.util.Map;
 @ValidValidator
 public class Validator {
 
+    /**
+     * Map of validators to validation function implementations to call during validation
+     */
     private static final Map<ValidatorType, ValidatorFunction> VALIDATORS_MAP = new HashMap<>();
     static {
         VALIDATORS_MAP.put(ValidatorType.NotNull, (v, o) ->

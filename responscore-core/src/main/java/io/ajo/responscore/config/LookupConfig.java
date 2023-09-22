@@ -16,9 +16,15 @@ import java.util.Set;
 @EqualsAndHashCode(of = {"code"})
 public class LookupConfig {
 
+    /**
+     * Unique identifier for this composite type
+     */
     @NotBlank
     private String code;
 
+    /**
+     * Set of items which comprises the acceptable values for this lookup type
+     */
     @Valid
     @NotNull
     @Size(min = 1)

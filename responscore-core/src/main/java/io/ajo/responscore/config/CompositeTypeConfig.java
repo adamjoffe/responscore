@@ -16,9 +16,15 @@ import java.util.Set;
 @EqualsAndHashCode(of = {"code"})
 public class CompositeTypeConfig {
 
+    /**
+     * Unique identifier for this composite type
+     */
     @NotBlank
     private String code;
 
+    /**
+     * Set of attributes which comprises this composite type
+     */
     @Valid
     @NotNull
     @Size(min = 1)

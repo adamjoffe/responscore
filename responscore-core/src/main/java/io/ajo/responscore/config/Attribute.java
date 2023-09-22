@@ -43,13 +43,31 @@ public class Attribute {
     @NotNull
     private Type type;
 
+    /**
+     * When type is {@link Type#LOOKUP}, this field sets the lookup reference for this attribute
+     */
     private String lookupCode;
+    /**
+     * When type is {@link Type#COMPOSITE}, this field sets the composite reference for this attribute
+     */
     private String compositeCode;
 
+    /**
+     * If the attribute is required for the form
+     */
     private boolean required;
+    /**
+     * If the attribute is a list of values
+     */
     private boolean list;
+    /**
+     * Default value for the attribute
+     */
     private Object defaultValue;
 
+    /**
+     * List of {@link Validator} to validate the attribute
+     */
     @Valid
     @NotNull
     @Builder.Default
@@ -63,6 +81,10 @@ public class Attribute {
     @Builder.Default
     private List<Validator> validateItems = new ArrayList<>();
 
+    /**
+     * List of dependents for this attribute. This indicates which fields and values for those fields must be
+     * set in order for this field to be considered "active"
+     */
     @Valid
     private List<Dependent> dependencies;
 

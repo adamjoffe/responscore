@@ -26,6 +26,9 @@ public enum Type {
     URL(STRING),
     PERCENTAGE(DECIMAL);
 
+    /**
+     * Map of native Java types which map to the responscore type
+     */
     private static final Map<Class<?>, Type> javaTypeMapping = new HashMap<>();
     static {
         // STRING maps

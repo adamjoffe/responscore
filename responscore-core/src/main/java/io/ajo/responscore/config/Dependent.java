@@ -13,9 +13,15 @@ import java.util.Set;
 @Builder
 public class Dependent {
 
+    /**
+     * Reference to the dependee {@link Attribute#getCode} which is the dependent attribute
+     */
     @NotBlank
     private String attributeCode;
 
+    /**
+     * List of values for the dependee attribute which would make this dependent attribute "active"
+     */
     @NotNull
     @Size(min = 1)
     @Builder.Default
