@@ -1,6 +1,8 @@
 package io.ajo.responscore.config;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.ajo.responscore.util.ObjectMapperUtils;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -48,6 +50,8 @@ public enum Type {
         javaTypeMapping.put(Map.class, COMPOSITE);
     }
 
+    private static final ObjectMapper OBJECT_MAPPER = ObjectMapperUtils.getObjectMapper();
+
     private final TypeReference<?> typeReference;
     private final Type parent;
 
@@ -75,6 +79,11 @@ public enum Type {
             loopType = loopType.parent;
         }
         return false;
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T> T coerceType(Object value) throws IllegalArgumentException {
+        return (T) OBJECT_MAPPER.convertValue(value, typeReference);
     }
 
     public static Optional<Type> getTypeForJavaType(Class<?> clz) {

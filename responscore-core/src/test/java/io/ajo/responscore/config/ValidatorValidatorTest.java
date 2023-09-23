@@ -402,4 +402,127 @@ public class ValidatorValidatorTest {
         assertFalse(maxSizeValidator.validate(List.of(1, 2, 3)));
         assertFalse(maxSizeValidator.validate(Map.of("k1", "v1", "k2", "v2", "k3", "v3")));
     }
+
+    @Test
+    @DisplayName("Valid Default Value")
+    public void validDefaultValue() {
+        final Attribute strAttr = Attribute.builder()
+                .code("code")
+                .label("label")
+                .type(Type.STRING)
+                .defaultValue(102)
+                .build();
+
+        final Set<ConstraintViolation<Attribute>> strViolations = validator.validate(strAttr);
+        assertEquals(0, strViolations.size());
+
+        final Attribute dateAttr = Attribute.builder()
+                .code("code")
+                .label("label")
+                .type(Type.DATE)
+                .defaultValue("2023-09-23T19:48:20+07:00")
+                .build();
+
+        final Set<ConstraintViolation<Attribute>> dateViolations = validator.validate(dateAttr);
+        assertEquals(0, dateViolations.size());
+
+        final Attribute decAttr = Attribute.builder()
+                .code("code")
+                .label("label")
+                .type(Type.DECIMAL)
+                .defaultValue("101.010")
+                .build();
+
+        final Set<ConstraintViolation<Attribute>> decViolations = validator.validate(decAttr);
+        assertEquals(0, decViolations.size());
+
+        final Attribute intAttr = Attribute.builder()
+                .code("code")
+                .label("label")
+                .type(Type.INTEGER)
+                .defaultValue("1")
+                .build();
+
+        final Set<ConstraintViolation<Attribute>> intViolations = validator.validate(intAttr);
+        assertEquals(0, intViolations.size());
+
+        final Attribute boolAttr = Attribute.builder()
+                .code("code")
+                .label("label")
+                .type(Type.BOOLEAN)
+                .defaultValue("true")
+                .build();
+
+        final Set<ConstraintViolation<Attribute>> boolViolations = validator.validate(boolAttr);
+        assertEquals(0, boolViolations.size());
+    }
+
+    @Test
+    @DisplayName("Invalid Default Value")
+    public void invalidDefaultValue() {
+        final Attribute strAttr = Attribute.builder()
+                .code("code")
+                .label("label")
+                .type(Type.STRING)
+                .defaultValue(Map.of("k1", "v1"))
+                .build();
+
+        final Set<ConstraintViolation<Attribute>> strViolations = validator.validate(strAttr);
+        assertEquals(1, strViolations.size());
+        final ConstraintViolation<Attribute> strViolation = strViolations.iterator().next();
+        assertEquals("attribute with default value ('{k1=v1}') is of wrong type for attribute type 'STRING'", strViolation.getMessage());
+        assertEquals("default", strViolation.getPropertyPath().toString());
+
+        final Attribute dateAttr = Attribute.builder()
+                .code("code")
+                .label("label")
+                .type(Type.DATE)
+                .defaultValue("6 January 2021")
+                .build();
+
+        final Set<ConstraintViolation<Attribute>> dateViolations = validator.validate(dateAttr);
+        assertEquals(1, dateViolations.size());
+        final ConstraintViolation<Attribute> dateViolation = dateViolations.iterator().next();
+        assertEquals("attribute with default value ('6 January 2021') is of wrong type for attribute type 'DATE'", dateViolation.getMessage());
+        assertEquals("default", dateViolation.getPropertyPath().toString());
+
+        final Attribute decAttr = Attribute.builder()
+                .code("code")
+                .label("label")
+                .type(Type.DECIMAL)
+                .defaultValue("ten point zero seven")
+                .build();
+
+        final Set<ConstraintViolation<Attribute>> decViolations = validator.validate(decAttr);
+        assertEquals(1, decViolations.size());
+        final ConstraintViolation<Attribute> decViolation = decViolations.iterator().next();
+        assertEquals("attribute with default value ('ten point zero seven') is of wrong type for attribute type 'DECIMAL'", decViolation.getMessage());
+        assertEquals("default", decViolation.getPropertyPath().toString());
+
+        final Attribute intAttr = Attribute.builder()
+                .code("code")
+                .label("label")
+                .type(Type.INTEGER)
+                .defaultValue("abc")
+                .build();
+
+        final Set<ConstraintViolation<Attribute>> intViolations = validator.validate(intAttr);
+        assertEquals(1, intViolations.size());
+        final ConstraintViolation<Attribute> intViolation = intViolations.iterator().next();
+        assertEquals("attribute with default value ('abc') is of wrong type for attribute type 'INTEGER'", intViolation.getMessage());
+        assertEquals("default", intViolation.getPropertyPath().toString());
+
+        final Attribute boolAttr = Attribute.builder()
+                .code("code")
+                .label("label")
+                .type(Type.BOOLEAN)
+                .defaultValue("definitely")
+                .build();
+
+        final Set<ConstraintViolation<Attribute>> boolViolations = validator.validate(boolAttr);
+        assertEquals(1, boolViolations.size());
+        final ConstraintViolation<Attribute> boolViolation = boolViolations.iterator().next();
+        assertEquals("attribute with default value ('definitely') is of wrong type for attribute type 'BOOLEAN'", boolViolation.getMessage());
+        assertEquals("default", boolViolation.getPropertyPath().toString());
+    }
 }

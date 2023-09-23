@@ -9,6 +9,8 @@ import org.apache.commons.lang3.StringUtils;
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 
+import static io.ajo.responscore.util.ValidationUtils.addMessageParameter;
+
 /**
  * Validates the {@link Attribute} to ensure fields are set correctly, checks:
  *  - If {@link Type} extends {@link Type#LOOKUP} then {@link Attribute#getLookupCode()} must be set
@@ -17,6 +19,7 @@ import javax.validation.ConstraintValidatorContext;
  *  - If {@link Attribute#getCompositeCode()} is set then {@link Type} must extend {@link Type#COMPOSITE}
  *  - If {@link Attribute#getValidateItems()} is not empty, then {@link Attribute#isList()} must be {@literal true}
  *  - If {@link Validator#getField()} is set, then {@link Attribute#getType()} must be {@link Type#COMPOSITE}
+ *  - If {@link Attribute#getDefaultValue()} is set, then value should be coercible to {@link Attribute#getType()}
  */
 public class AttributeValidator implements ConstraintValidator<ValidAttribute, Attribute> {
 
@@ -84,6 +87,19 @@ public class AttributeValidator implements ConstraintValidator<ValidAttribute, A
                         .addPropertyNode(null)
                         .inIterable().atIndex(i)
                         .addPropertyNode("field")
+                        .addConstraintViolation();
+                valid = false;
+            }
+        }
+        if (value.getDefaultValue() != null) {
+            try {
+                value.getType().coerceType(value.getDefaultValue());
+            } catch (IllegalArgumentException ignore) {
+                ctx.disableDefaultConstraintViolation();
+                addMessageParameter(ctx, "defaultValue", value.getDefaultValue().toString());
+                addMessageParameter(ctx, "type", value.getType().name());
+                ctx.buildConstraintViolationWithTemplate("{responscore.validation.attribute_validator.incorrect_default_value_type}")
+                        .addPropertyNode("default")
                         .addConstraintViolation();
                 valid = false;
             }
