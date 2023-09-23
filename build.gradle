@@ -1,5 +1,6 @@
 plugins {
     id 'java'
+    id 'jacoco'
 }
 
 group 'io.ajo.responscore'
@@ -11,6 +12,7 @@ repositories {
 
 subprojects {
     apply plugin: 'java'
+    apply plugin: 'jacoco'
 
     sourceCompatibility = 19
     targetCompatibility = 19
@@ -42,6 +44,11 @@ subprojects {
 
     test {
         useJUnitPlatform()
+        finalizedBy jacocoTestReport
+    }
+
+    jacocoTestReport {
+        dependsOn test
     }
 }
 

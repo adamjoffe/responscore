@@ -13,6 +13,7 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@DisplayName("Attribute Validator Test")
 public class AttributeValidatorTest {
 
     private final javax.validation.Validator validator = ValidationUtils.getValidator();
@@ -40,18 +41,18 @@ public class AttributeValidatorTest {
         final Set<ConstraintViolation<Attribute>> violations = validator.validate(attr);
 
         assertEquals(3, violations.size());
-        final Optional<ConstraintViolation<Attribute>> oNullType = violations.stream()
+        final Optional<ConstraintViolation<Attribute>> oTypeViolation = violations.stream()
                 .filter(v -> v.getPropertyPath().toString().equals("type")).findAny();
-        assertTrue(oNullType.isPresent());
-        assertEquals("must not be null", oNullType.get().getMessage());
-        final Optional<ConstraintViolation<Attribute>> oNullLabel = violations.stream()
+        assertTrue(oTypeViolation.isPresent());
+        assertEquals("must not be null", oTypeViolation.get().getMessage());
+        final Optional<ConstraintViolation<Attribute>> oLabelViolation = violations.stream()
                 .filter(v -> v.getPropertyPath().toString().equals("label")).findAny();
-        assertTrue(oNullLabel.isPresent());
-        assertEquals("must not be blank", oNullLabel.get().getMessage());
-        final Optional<ConstraintViolation<Attribute>> oNullCode = violations.stream()
+        assertTrue(oLabelViolation.isPresent());
+        assertEquals("must not be blank", oLabelViolation.get().getMessage());
+        final Optional<ConstraintViolation<Attribute>> oCodeViolation = violations.stream()
                 .filter(v -> v.getPropertyPath().toString().equals("code")).findAny();
-        assertTrue(oNullCode.isPresent());
-        assertEquals("must not be blank", oNullCode.get().getMessage());
+        assertTrue(oCodeViolation.isPresent());
+        assertEquals("must not be blank", oCodeViolation.get().getMessage());
     }
 
     @Test

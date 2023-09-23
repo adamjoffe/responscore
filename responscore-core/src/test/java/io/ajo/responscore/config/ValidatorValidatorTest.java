@@ -11,6 +11,7 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@DisplayName("Validator Validator Test")
 public class ValidatorValidatorTest {
 
     private final javax.validation.Validator validator = ValidationUtils.getValidator();
