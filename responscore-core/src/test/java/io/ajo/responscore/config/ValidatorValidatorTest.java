@@ -7,9 +7,14 @@ import org.junit.jupiter.api.Test;
 
 import javax.validation.ConstraintViolation;
 import java.math.BigDecimal;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DisplayName("Validator Validator Test")
 public class ValidatorValidatorTest {
@@ -279,5 +284,122 @@ public class ValidatorValidatorTest {
         final ConstraintViolation<Validator> violation = violations.iterator().next();
         assertEquals("validator not of type 'NotEmpty' has 'value' field set invalidly", violation.getMessage());
         assertEquals("value", violation.getPropertyPath().toString());
+    }
+
+    @Test
+    @DisplayName("Test NotNull Validator Logic")
+    public void testNotNullValidatorLogic() {
+        final Validator notNullValidator = Validator.builder().type(ValidatorType.NotNull).build();
+        assertTrue(notNullValidator.validate(1));
+        assertFalse(notNullValidator.validate(null));
+    }
+
+    @Test
+    @DisplayName("Test NotBlank Validator Logic")
+    public void testNotBlankValidatorLogic() {
+        final Validator notBlankValidator = Validator.builder().type(ValidatorType.NotBlank).build();
+        assertTrue(notBlankValidator.validate("abc"));
+        assertFalse(notBlankValidator.validate(""));
+        assertFalse(notBlankValidator.validate(null));
+        assertFalse(notBlankValidator.validate(1));
+    }
+
+    @Test
+    @DisplayName("Test Min Validator Logic")
+    public void testMinValidatorLogic() {
+        final Validator minValidator = Validator.builder()
+                .type(ValidatorType.Min)
+                .value(BigDecimal.TEN)
+                .build();
+        assertTrue(minValidator.validate(15));
+        assertTrue(minValidator.validate(BigDecimal.valueOf(105.21)));
+        assertFalse(minValidator.validate(1));
+        assertFalse(minValidator.validate(null));
+        assertFalse(minValidator.validate("abc"));
+    }
+
+    @Test
+    @DisplayName("Test Max Validator Logic")
+    public void testMaxValidatorLogic() {
+        final Validator maxValidator = Validator.builder()
+                .type(ValidatorType.Max)
+                .value(BigDecimal.TEN)
+                .build();
+        assertTrue(maxValidator.validate(5));
+        assertTrue(maxValidator.validate(2.12));
+        assertFalse(maxValidator.validate(16));
+        assertFalse(maxValidator.validate(null));
+        assertFalse(maxValidator.validate("abc"));
+    }
+
+    @Test
+    @DisplayName("Test GreaterThan Validator Logic")
+    public void testGreaterThanValidatorLogic() {
+        final Validator greaterThanValidator = Validator.builder()
+                .type(ValidatorType.GreaterThan)
+                .value(BigDecimal.TEN)
+                .build();
+        assertTrue(greaterThanValidator.validate(11));
+        assertTrue(greaterThanValidator.validate(10.0001));
+        assertFalse(greaterThanValidator.validate(10));
+        assertFalse(greaterThanValidator.validate(null));
+        assertFalse(greaterThanValidator.validate("abc"));
+    }
+
+    @Test
+    @DisplayName("Test LessThan Validator Logic")
+    public void testLessThanValidatorLogic() {
+        final Validator lessThanValidator = Validator.builder()
+                .type(ValidatorType.LessThan)
+                .value(BigDecimal.TEN)
+                .build();
+        assertTrue(lessThanValidator.validate(9));
+        assertTrue(lessThanValidator.validate(9.9999));
+        assertFalse(lessThanValidator.validate(10));
+        assertFalse(lessThanValidator.validate(null));
+        assertFalse(lessThanValidator.validate("abc"));
+    }
+
+    @Test
+    @DisplayName("Test NotEmpty Validator Logic")
+    public void testNotEmptyValidatorLogic() {
+        final Validator notEmptyValidator = Validator.builder().type(ValidatorType.NotEmpty).build();
+        assertTrue(notEmptyValidator.validate("abc"));
+        assertTrue(notEmptyValidator.validate(List.of(1, 2, 3)));
+        assertTrue(notEmptyValidator.validate(Optional.of(1)));
+        assertTrue(notEmptyValidator.validate(Map.of("key", "value")));
+        assertFalse(notEmptyValidator.validate(""));
+        assertFalse(notEmptyValidator.validate(List.of()));
+        assertFalse(notEmptyValidator.validate(Map.of()));
+    }
+
+    @Test
+    @DisplayName("Test MinSize Validator Logic")
+    public void testMinSizeValidatorLogic() {
+        final Validator minSizeValidator = Validator.builder()
+                .type(ValidatorType.MinSize)
+                .value(BigDecimal.TWO)
+                .build();
+        assertTrue(minSizeValidator.validate("abc"));
+        assertTrue(minSizeValidator.validate(List.of(1, 2)));
+        assertTrue(minSizeValidator.validate(Map.of("key1", "value1", "key2", "value2")));
+        assertFalse(minSizeValidator.validate("a"));
+        assertFalse(minSizeValidator.validate(List.of(1)));
+        assertFalse(minSizeValidator.validate(Map.of("key1", "value1")));
+    }
+
+    @Test
+    @DisplayName("Test MaxSize Validator Logic")
+    public void testMaxSizeValidatorLogic() {
+        final Validator maxSizeValidator = Validator.builder()
+                .type(ValidatorType.MaxSize)
+                .value(BigDecimal.TWO)
+                .build();
+        assertTrue(maxSizeValidator.validate("ab"));
+        assertTrue(maxSizeValidator.validate(List.of(1, 2)));
+        assertTrue(maxSizeValidator.validate(Map.of("key1", "value1", "key2", "value2")));
+        assertFalse(maxSizeValidator.validate("abc"));
+        assertFalse(maxSizeValidator.validate(List.of(1, 2, 3)));
+        assertFalse(maxSizeValidator.validate(Map.of("k1", "v1", "k2", "v2", "k3", "v3")));
     }
 }
