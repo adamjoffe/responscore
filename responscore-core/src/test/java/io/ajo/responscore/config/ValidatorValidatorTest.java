@@ -11,9 +11,22 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class ValidatorTest {
+public class ValidatorValidatorTest {
 
     private final javax.validation.Validator validator = ValidationUtils.getValidator();
+
+    @Test
+    @DisplayName("Invalid Validator Null Type")
+    public void invalidValidatorNullType() {
+        final Validator invalidValidator = Validator.builder().build();
+
+        final Set<ConstraintViolation<Validator>> violations = validator.validate(invalidValidator);
+
+        assertEquals(1, violations.size());
+        final ConstraintViolation<Validator> violation = violations.iterator().next();
+        assertEquals("must not be null", violation.getMessage());
+        assertEquals("type", violation.getPropertyPath().toString());
+    }
 
     @Test
     @DisplayName("Valid Min Validator")
@@ -38,8 +51,8 @@ public class ValidatorTest {
         final Set<ConstraintViolation<Validator>> violations = validator.validate(minValidator);
 
         assertEquals(1, violations.size());
-        final ConstraintViolation<Validator> violation = violations.stream().iterator().next();
-        assertEquals("Validator of type 'Min' must have 'value' field set", violation.getMessage());
+        final ConstraintViolation<Validator> violation = violations.iterator().next();
+        assertEquals("validator of type 'Min' must have 'value' field set", violation.getMessage());
         assertEquals("value", violation.getPropertyPath().toString());
     }
 
@@ -66,8 +79,8 @@ public class ValidatorTest {
         final Set<ConstraintViolation<Validator>> violations = validator.validate(minValidator);
 
         assertEquals(1, violations.size());
-        final ConstraintViolation<Validator> violation = violations.stream().iterator().next();
-        assertEquals("Validator of type 'Max' must have 'value' field set", violation.getMessage());
+        final ConstraintViolation<Validator> violation = violations.iterator().next();
+        assertEquals("validator of type 'Max' must have 'value' field set", violation.getMessage());
         assertEquals("value", violation.getPropertyPath().toString());
     }
 
@@ -94,8 +107,8 @@ public class ValidatorTest {
         final Set<ConstraintViolation<Validator>> violations = validator.validate(minValidator);
 
         assertEquals(1, violations.size());
-        final ConstraintViolation<Validator> violation = violations.stream().iterator().next();
-        assertEquals("Validator of type 'GreaterThan' must have 'value' field set", violation.getMessage());
+        final ConstraintViolation<Validator> violation = violations.iterator().next();
+        assertEquals("validator of type 'GreaterThan' must have 'value' field set", violation.getMessage());
         assertEquals("value", violation.getPropertyPath().toString());
     }
 
@@ -122,8 +135,8 @@ public class ValidatorTest {
         final Set<ConstraintViolation<Validator>> violations = validator.validate(minValidator);
 
         assertEquals(1, violations.size());
-        final ConstraintViolation<Validator> violation = violations.stream().iterator().next();
-        assertEquals("Validator of type 'LessThan' must have 'value' field set", violation.getMessage());
+        final ConstraintViolation<Validator> violation = violations.iterator().next();
+        assertEquals("validator of type 'LessThan' must have 'value' field set", violation.getMessage());
         assertEquals("value", violation.getPropertyPath().toString());
     }
 
@@ -150,8 +163,8 @@ public class ValidatorTest {
         final Set<ConstraintViolation<Validator>> violations = validator.validate(minValidator);
 
         assertEquals(1, violations.size());
-        final ConstraintViolation<Validator> violation = violations.stream().iterator().next();
-        assertEquals("Validator of type 'MinSize' must have 'value' field set", violation.getMessage());
+        final ConstraintViolation<Validator> violation = violations.iterator().next();
+        assertEquals("validator of type 'MinSize' must have 'value' field set", violation.getMessage());
         assertEquals("value", violation.getPropertyPath().toString());
     }
 
@@ -178,8 +191,8 @@ public class ValidatorTest {
         final Set<ConstraintViolation<Validator>> violations = validator.validate(minValidator);
 
         assertEquals(1, violations.size());
-        final ConstraintViolation<Validator> violation = violations.stream().iterator().next();
-        assertEquals("Validator of type 'MaxSize' must have 'value' field set", violation.getMessage());
+        final ConstraintViolation<Validator> violation = violations.iterator().next();
+        assertEquals("validator of type 'MaxSize' must have 'value' field set", violation.getMessage());
         assertEquals("value", violation.getPropertyPath().toString());
     }
 
@@ -206,8 +219,8 @@ public class ValidatorTest {
         final Set<ConstraintViolation<Validator>> violations = validator.validate(minValidator);
 
         assertEquals(1, violations.size());
-        final ConstraintViolation<Validator> violation = violations.stream().iterator().next();
-        assertEquals("Validator not of type 'NotNull' has 'value' field set invalidly", violation.getMessage());
+        final ConstraintViolation<Validator> violation = violations.iterator().next();
+        assertEquals("validator not of type 'NotNull' has 'value' field set invalidly", violation.getMessage());
         assertEquals("value", violation.getPropertyPath().toString());
     }
 
@@ -234,8 +247,8 @@ public class ValidatorTest {
         final Set<ConstraintViolation<Validator>> violations = validator.validate(minValidator);
 
         assertEquals(1, violations.size());
-        final ConstraintViolation<Validator> violation = violations.stream().iterator().next();
-        assertEquals("Validator not of type 'NotBlank' has 'value' field set invalidly", violation.getMessage());
+        final ConstraintViolation<Validator> violation = violations.iterator().next();
+        assertEquals("validator not of type 'NotBlank' has 'value' field set invalidly", violation.getMessage());
         assertEquals("value", violation.getPropertyPath().toString());
     }
 
@@ -262,8 +275,8 @@ public class ValidatorTest {
         final Set<ConstraintViolation<Validator>> violations = validator.validate(minValidator);
 
         assertEquals(1, violations.size());
-        final ConstraintViolation<Validator> violation = violations.stream().iterator().next();
-        assertEquals("Validator not of type 'NotEmpty' has 'value' field set invalidly", violation.getMessage());
+        final ConstraintViolation<Validator> violation = violations.iterator().next();
+        assertEquals("validator not of type 'NotEmpty' has 'value' field set invalidly", violation.getMessage());
         assertEquals("value", violation.getPropertyPath().toString());
     }
 }

@@ -20,6 +20,10 @@ public class ValidatorValidator implements ConstraintValidator<ValidValidator, V
 
     @Override
     public boolean isValid(Validator value, ConstraintValidatorContext ctx) {
+        // skip constraint checks if type is missing, there will be separate validation
+        if (value.getType() == null) {
+            return true;
+        }
         switch (value.getType()) {
             case Min, Max, GreaterThan, LessThan, MinSize, MaxSize -> {
                 if (value.getValue() == null) {

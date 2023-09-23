@@ -6,6 +6,7 @@ import io.ajo.responscore.config.CompositeTypeConfig;
 import io.ajo.responscore.config.Dependent;
 import io.ajo.responscore.config.LookupConfig;
 import io.ajo.responscore.config.Type;
+import io.ajo.responscore.config.Validator;
 import io.ajo.responscore.config.validation.annotation.ValidConfig;
 
 import javax.validation.ConstraintValidator;
@@ -15,6 +16,7 @@ import javax.validation.ConstraintValidatorContext;
  * Validates the {@link Config} to ensure fields are set correctly, checks:
  *  - If {@link Attribute} extends {@link Type#LOOKUP} then {@link Attribute#getLookupCode()} must reference a {@link LookupConfig}
  *  - If {@link Attribute} extends {@link Type#COMPOSITE} then {@link Attribute#getCompositeCode()} must reference a {@link CompositeTypeConfig}
+ *  - If {@link Attribute} extends {@link Type#COMPOSITE} and has {@link Validator#getField()} set, then field must be part of {@link CompositeTypeConfig}
  *  - If {@link Attribute} has {@link Attribute#getDependencies()} then {@link Dependent#getAttributeCode()} must reference another {@link Attribute#getCode}
  */
 public class ConfigValidator implements ConstraintValidator<ValidConfig, Config> {

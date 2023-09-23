@@ -12,20 +12,32 @@ import javax.validation.ConstraintValidatorContext;
 /**
  * Validates the {@link Attribute} to ensure fields are set correctly, checks:
  *  - If {@link Type} extends {@link Type#LOOKUP} then {@link Attribute#getLookupCode()} must be set
+ *  - If {@link Attribute#getLookupCode()} is set then {@link Type} must extend {@link Type#LOOKUP}
  *  - If {@link Type} extends {@link Type#COMPOSITE} then {@link Attribute#getCompositeCode()} must be set
+ *  - If {@link Attribute#getCompositeCode()} is set then {@link Type} must extend {@link Type#COMPOSITE}
  *  - If {@link Attribute#getValidateItems()} is not empty, then {@link Attribute#isList()} must be {@literal true}
  *  - If {@link Validator#getField()} is set, then {@link Attribute#getType()} must be {@link Type#COMPOSITE}
  */
 public class AttributeValidator implements ConstraintValidator<ValidAttribute, Attribute> {
 
-
     @Override
     public boolean isValid(Attribute value, ConstraintValidatorContext ctx) {
         boolean valid = true;
+        // skip constraint checks if type is missing, there will be separate validation
+        if (value.getType() == null) {
+            return valid;
+        }
         if (value.getType().extendsType(Type.LOOKUP) && StringUtils.isEmpty(value.getLookupCode())) {
             ctx.disableDefaultConstraintViolation();
             ctx.buildConstraintViolationWithTemplate("{responscore.validation.attribute_validator.no_lookup_code}")
                     .addPropertyNode("lookupCode")
+                    .addConstraintViolation();
+            valid = false;
+        }
+        if (!StringUtils.isEmpty(value.getLookupCode()) && !value.getType().extendsType(Type.LOOKUP)) {
+            ctx.disableDefaultConstraintViolation();
+            ctx.buildConstraintViolationWithTemplate("{responscore.validation.attribute_validator.not_lookup_type}")
+                    .addPropertyNode("type")
                     .addConstraintViolation();
             valid = false;
         }
@@ -36,9 +48,16 @@ public class AttributeValidator implements ConstraintValidator<ValidAttribute, A
                     .addConstraintViolation();
             valid = false;
         }
+        if (!StringUtils.isEmpty(value.getCompositeCode()) && !value.getType().extendsType(Type.COMPOSITE)) {
+            ctx.disableDefaultConstraintViolation();
+            ctx.buildConstraintViolationWithTemplate("{responscore.validation.attribute_validator.not_composite_type}")
+                    .addPropertyNode("type")
+                    .addConstraintViolation();
+            valid = false;
+        }
         if (!value.getValidateItems().isEmpty() && !value.isList()) {
             ctx.disableDefaultConstraintViolation();
-            ctx.buildConstraintViolationWithTemplate("{responscore.validation.attribute_validator.validate_items_not_list")
+            ctx.buildConstraintViolationWithTemplate("{responscore.validation.attribute_validator.validate_items_not_list}")
                     .addPropertyNode("list")
                     .addConstraintViolation();
             valid = false;
@@ -49,6 +68,7 @@ public class AttributeValidator implements ConstraintValidator<ValidAttribute, A
                 ctx.disableDefaultConstraintViolation();
                 ctx.buildConstraintViolationWithTemplate("{responscore.validation.attribute_validator.validator_field_ref_not_composite}")
                         .addPropertyNode("validators")
+                        .addPropertyNode(null)
                         .inIterable().atIndex(i)
                         .addPropertyNode("field")
                         .addConstraintViolation();
@@ -61,6 +81,7 @@ public class AttributeValidator implements ConstraintValidator<ValidAttribute, A
                 ctx.disableDefaultConstraintViolation();
                 ctx.buildConstraintViolationWithTemplate("{responscore.validation.attribute_validator.validate_items_field_ref_not_composite}")
                         .addPropertyNode("validateItems")
+                        .addPropertyNode(null)
                         .inIterable().atIndex(i)
                         .addPropertyNode("field")
                         .addConstraintViolation();
