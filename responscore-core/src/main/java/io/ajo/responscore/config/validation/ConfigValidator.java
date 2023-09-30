@@ -8,12 +8,14 @@ import io.ajo.responscore.config.LookupConfig;
 import io.ajo.responscore.config.Type;
 import io.ajo.responscore.config.Validator;
 import io.ajo.responscore.config.validation.annotation.ValidConfig;
+import io.ajo.responscore.validation.ConstraintViolationBuilder;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
-
-import static io.ajo.responscore.util.ValidationUtils.addMessageParameter;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
 
 /**
  * Validates the {@link Config} to ensure fields are set correctly, checks:
@@ -26,9 +28,19 @@ import static io.ajo.responscore.util.ValidationUtils.addMessageParameter;
  */
 public class ConfigValidator implements ConstraintValidator<ValidConfig, Config> {
 
+    private final Set<LookupConfig> usedLookupConfigs = new HashSet<>();
+    private final Set<CompositeTypeConfig> usedCompositeTypeConfigs = new HashSet<>();
+
     @Override
     public boolean isValid(Config value, ConstraintValidatorContext ctx) {
         boolean valid = true;
+        final ConstraintViolationBuilder builder = ConstraintViolationBuilder.builder(ctx);
+        boolean recursiveValid = recursiveCompositeIsValid(builder, value, value.getAttributes());
+        // if recursive result is invalid, then propagate
+        if (!recursiveValid) {
+            valid = false;
+        }
+
         int i = 0;
         // lookup config validation
         for (final LookupConfig lookupConfig : value.getLookupConfigs()) {
@@ -36,14 +48,12 @@ public class ConfigValidator implements ConstraintValidator<ValidConfig, Config>
             if (lookupConfig.getCode() == null) {
                 continue;
             }
-            if (value.getAttributes().stream().noneMatch(a -> lookupConfig.getCode().equals(a.getLookupCode()))) {
-                ctx.disableDefaultConstraintViolation();
-                addMessageParameter(ctx, "lookupConfig", lookupConfig.getCode());
-                ctx.buildConstraintViolationWithTemplate("{responscore.validation.config_validator.lookup_config_unused}")
+            if (!usedLookupConfigs.contains(lookupConfig)) {
+                ConstraintViolationBuilder.builder(ctx)
                         .addPropertyNode("lookupConfigs")
-                        .addPropertyNode(null)
-                        .inIterable().atIndex(i)
-                        .addConstraintViolation();
+                        .addIterableNode(i)
+                        .addMessageParameter("lookupConfig", lookupConfig.getCode())
+                        .build("{responscore.validation.config_validator.lookup_config_unused}");
                 valid = false;
             }
             i++;
@@ -56,64 +66,71 @@ public class ConfigValidator implements ConstraintValidator<ValidConfig, Config>
             if (compositeTypeConfig.getCode() == null) {
                 continue;
             }
-            if (value.getAttributes().stream().noneMatch(a -> compositeTypeConfig.getCode().equals(a.getCompositeCode()))) {
-                ctx.disableDefaultConstraintViolation();
-                addMessageParameter(ctx, "compositeTypeConfig", compositeTypeConfig.getCode());
-                ctx.buildConstraintViolationWithTemplate("{responscore.validation.config_validator.composite_type_config_unused}")
+            if (!usedCompositeTypeConfigs.contains(compositeTypeConfig)) {
+                ConstraintViolationBuilder.builder(ctx)
                         .addPropertyNode("compositeTypeConfigs")
-                        .addPropertyNode(null)
-                        .inIterable().atIndex(i)
-                        .addConstraintViolation();
+                        .addIterableNode(i)
+                        .addMessageParameter("compositeTypeConfig", compositeTypeConfig.getCode())
+                        .build("{responscore.validation.config_validator.composite_type_config_unused}");
                 valid = false;
             }
         }
 
-        // attribute validation
-        i = 0;
-        for (final Attribute attr : value.getAttributes()) {
-            if (attr.getType().extendsType(Type.LOOKUP)
-                && value.getLookupConfigs().stream().noneMatch(c -> c.getCode().equals(attr.getLookupCode()))
-            ) {
-                ctx.disableDefaultConstraintViolation();
-                addMessageParameter(ctx, "lookupCode", attr.getLookupCode());
-                ctx.buildConstraintViolationWithTemplate("{responscore.validation.config_validator.unknown_lookup_code}")
-                        .addPropertyNode("attributes")
-                        .addPropertyNode(null)
-                        .inIterable().atIndex(i)
-                        .addPropertyNode("lookupCode")
-                        .addConstraintViolation();
-                valid = false;
-            }
-            if (attr.getType().extendsType(Type.COMPOSITE)) {
-                if (value.getCompositeTypeConfigs().stream().noneMatch(c -> c.getCode().equals(attr.getCompositeCode()))) {
-                    ctx.disableDefaultConstraintViolation();
-                    addMessageParameter(ctx, "compositeCode", attr.getCompositeCode());
-                    ctx.buildConstraintViolationWithTemplate("{responscore.validation.config_validator.unknown_composite_code}")
-                            .addPropertyNode("attributes")
-                            .addPropertyNode(null)
-                            .inIterable().atIndex(i)
-                            .addPropertyNode("compositeCode")
-                            .addConstraintViolation();
+        return valid;
+    }
+
+    private boolean recursiveCompositeIsValid(ConstraintViolationBuilder ctx, Config config, Set<Attribute> attributes) {
+        boolean valid = true;
+        int i = 0;
+        for (final Attribute attr : attributes) {
+            // construct a new instance of the ctx with the new path
+            final ConstraintViolationBuilder attrCtx = ConstraintViolationBuilder.from(ctx)
+                    .addPropertyNode("attributes")
+                    .addIterableNode(i);
+
+            // validation for lookup attribute
+            if (attr.getType().extendsType(Type.LOOKUP)) {
+                final Optional<LookupConfig> oLookupConfig = config.getLookupConfigs().stream()
+                        .filter(c -> c.getCode().equals(attr.getLookupCode()))
+                        .findAny();
+                if (oLookupConfig.isEmpty()) {
+                    ConstraintViolationBuilder.from(attrCtx)
+                            .addPropertyNode("lookupCode")
+                            .addMessageParameter("lookupCode", attr.getLookupCode())
+                            .build("{responscore.validation.config_validator.unknown_lookup_code}");
                     valid = false;
                 } else {
-                    final CompositeTypeConfig compositeTypeConfig = value.getCompositeTypeConfigs().stream()
-                            .filter(c -> c.getCode().equals(attr.getCompositeCode())).findAny().get();
+                    // add to seen list for later validation
+                    usedLookupConfigs.add(oLookupConfig.get());
+                }
+            }
+
+            // validate for composite attribute
+            if (attr.getType().extendsType(Type.COMPOSITE)) {
+                final Optional<CompositeTypeConfig> oCompositeTypeConfig = config.getCompositeTypeConfigs().stream()
+                        .filter(c -> c.getCode().equals(attr.getCompositeCode()))
+                        .findAny();
+                if (oCompositeTypeConfig.isEmpty()) {
+                    ConstraintViolationBuilder.from(attrCtx)
+                            .addPropertyNode("compositeCode")
+                            .addMessageParameter("compositeCode", attr.getCompositeCode())
+                            .build("{responscore.validation.config_validator.unknown_composite_code}");
+                    valid = false;
+                } else {
+                    final CompositeTypeConfig compositeTypeConfig = oCompositeTypeConfig.get();
+                    // add type to seen list for later validation
+                    usedCompositeTypeConfigs.add(compositeTypeConfig);
                     for (int j = 0; j < attr.getValidators().size(); j++) {
                         final Validator validator = attr.getValidators().get(j);
                         if (!StringUtils.isEmpty(validator.getField())
                                 && compositeTypeConfig.getAttributes().stream().noneMatch(a -> a.getCode().equals(validator.getField()))) {
-                            ctx.disableDefaultConstraintViolation();
-                            addMessageParameter(ctx, "field", validator.getField());
-                            addMessageParameter(ctx, "compositeCode", attr.getCompositeCode());
-                            ctx.buildConstraintViolationWithTemplate("{responscore.validation.config_validator.unknown_validator_composite_field}")
-                                    .addPropertyNode("attributes")
-                                    .addPropertyNode(null)
-                                    .inIterable().atIndex(i)
+                            ConstraintViolationBuilder.from(attrCtx)
                                     .addPropertyNode("validators")
-                                    .addPropertyNode(null)
-                                    .inIterable().atIndex(j)
+                                    .addIterableNode(j)
                                     .addPropertyNode("field")
-                                    .addConstraintViolation();
+                                    .addMessageParameter("field", validator.getField())
+                                    .addMessageParameter("compositeCode", attr.getCompositeCode())
+                                    .build("{responscore.validation.config_validator.unknown_validator_composite_field}");
                             valid = false;
                         }
                     }
@@ -121,38 +138,35 @@ public class ConfigValidator implements ConstraintValidator<ValidConfig, Config>
                         final Validator validator = attr.getValidateItems().get(j);
                         if (!StringUtils.isEmpty(validator.getField())
                                 && compositeTypeConfig.getAttributes().stream().noneMatch(a -> a.getCode().equals(validator.getField()))) {
-                            ctx.disableDefaultConstraintViolation();
-                            addMessageParameter(ctx, "field", validator.getField());
-                            addMessageParameter(ctx, "compositeCode", attr.getCompositeCode());
-                            ctx.buildConstraintViolationWithTemplate("{responscore.validation.config_validator.unknown_validate_item_composite_file}")
-                                    .addPropertyNode("attributes")
-                                    .addPropertyNode(null)
-                                    .inIterable().atIndex(i)
+                            ConstraintViolationBuilder.from(attrCtx)
                                     .addPropertyNode("validateItems")
-                                    .addPropertyNode(null)
-                                    .inIterable().atIndex(j)
+                                    .addIterableNode(j)
                                     .addPropertyNode("field")
-                                    .addConstraintViolation();
+                                    .addMessageParameter("field", validator.getField())
+                                    .addMessageParameter("compositeCode", attr.getCompositeCode())
+                                    .build("{responscore.validation.config_validator.unknown_validate_item_composite_file}");
                             valid = false;
                         }
+                    }
+
+                    // recurse the attributes to further validate
+                    boolean recursiveValid = recursiveCompositeIsValid(attrCtx, config, compositeTypeConfig.getAttributes());
+                    // if recursive result is invalid, then propagate
+                    if (!recursiveValid) {
+                        valid = false;
                     }
                 }
             }
             if (attr.getDependencies() != null) {
                 for (int j = 0; j < attr.getDependencies().size(); j++) {
                     final Dependent dependent = attr.getDependencies().get(j);
-                    if (value.getAttributes().stream().noneMatch(a -> a.getCode().equals(dependent.getAttributeCode()))) {
-                        ctx.disableDefaultConstraintViolation();
-                        addMessageParameter(ctx, "attributeCode", dependent.getAttributeCode());
-                        ctx.buildConstraintViolationWithTemplate("{responscore.validation.config_validator.invalid_dependent_reference}")
-                                .addPropertyNode("attributes")
-                                .addPropertyNode(null)
-                                .inIterable().atIndex(i)
+                    if (config.getAttributes().stream().noneMatch(a -> a.getCode().equals(dependent.getAttributeCode()))) {
+                        ConstraintViolationBuilder.from(attrCtx)
                                 .addPropertyNode("dependencies")
-                                .addPropertyNode(null)
-                                .inIterable().atIndex(j)
+                                .addIterableNode(j)
                                 .addPropertyNode("attributeCode")
-                                .addConstraintViolation();
+                                .addMessageParameter("attributeCode", dependent.getAttributeCode())
+                                .build("{responscore.validation.config_validator.invalid_dependent_reference}");
                         valid = false;
                     }
                 }

@@ -1,8 +1,5 @@
 package io.ajo.responscore.util;
 
-import org.hibernate.validator.internal.engine.constraintvalidation.ConstraintValidatorContextImpl;
-
-import javax.validation.ConstraintValidatorContext;
 import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
@@ -24,15 +21,5 @@ public class ValidationUtils {
             }
         }
         return VALIDATOR_INSTANCE;
-    }
-
-    /**
-     * Adds a message interpolation parameter to the constraint validation being created
-     * @param ctx {@link ConstraintValidatorContext} which should be of type {@link ConstraintValidatorContextImpl}
-     * @param name interpolation parameter name
-     * @param value value to interpolate into the message
-     */
-    public static void addMessageParameter(ConstraintValidatorContext ctx, String name, String value) {
-        ((ConstraintValidatorContextImpl) ctx).addMessageParameter(name, value);
     }
 }

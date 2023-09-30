@@ -223,6 +223,53 @@ public class ConfigValidatorTest {
     }
 
     @Test
+    @DisplayName("Valid Nested Lookup Config")
+    public void validNestedLookupConfig() {
+        final Config config = Config.builder()
+                .attributes(Set.of(
+                        Attribute.builder()
+                                .code("code")
+                                .label("label")
+                                .type(Type.COMPOSITE)
+                                .compositeCode("compositeCode")
+                                .build()
+                ))
+                .compositeTypeConfigs(Set.of(
+                        CompositeTypeConfig.builder()
+                                .code("compositeCode")
+                                .attributes(Set.of(
+                                        Attribute.builder()
+                                                .code("cCode")
+                                                .label("cLabel")
+                                                .type(Type.LOOKUP)
+                                                .lookupCode("lookupCode")
+                                                .build()
+                                ))
+                                .build()
+                ))
+                .lookupConfigs(Set.of(
+                        LookupConfig.builder()
+                                .code("lookupCode")
+                                .lookupItems(Set.of(
+                                        LookupItem.builder()
+                                                .code("item1")
+                                                .label("Item 1")
+                                                .build(),
+                                        LookupItem.builder()
+                                                .code("item2")
+                                                .label("Item 2")
+                                                .build()
+                                ))
+                                .build()
+                ))
+                .build();
+
+        final Set<ConstraintViolation<Config>> violations = validator.validate(config);
+
+        assertEquals(0, violations.size());
+    }
+
+    @Test
     @DisplayName("Invalid Attribute Lookup Code Reference")
     public void invalidAttributeLookupCodeReference() {
         final Config config = Config.builder()
@@ -242,6 +289,41 @@ public class ConfigValidatorTest {
         final ConstraintViolation<Config> violation = violations.iterator().next();
         assertEquals("attribute referenced a 'lookupCode' ('lookupCode') which isn't declared", violation.getMessage());
         assertEquals("attributes[0].lookupCode", violation.getPropertyPath().toString());
+    }
+
+    @Test
+    @DisplayName("Invalid Nested Attribute Lookup Code Reference")
+    public void invalidNestedAttributeLookupCodeReference() {
+        final Config config = Config.builder()
+                .attributes(Set.of(
+                        Attribute.builder()
+                                .code("code")
+                                .label("label")
+                                .type(Type.COMPOSITE)
+                                .compositeCode("compositeCode")
+                                .build()
+                ))
+                .compositeTypeConfigs(Set.of(
+                        CompositeTypeConfig.builder()
+                                .code("compositeCode")
+                                .attributes(Set.of(
+                                        Attribute.builder()
+                                                .code("cCode")
+                                                .label("cLabel")
+                                                .type(Type.LOOKUP)
+                                                .lookupCode("lookupCode")
+                                                .build()
+                                ))
+                                .build()
+                ))
+                .build();
+
+        final Set<ConstraintViolation<Config>> violations = validator.validate(config);
+
+        assertEquals(1, violations.size());
+        final ConstraintViolation<Config> violation = violations.iterator().next();
+        assertEquals("attribute referenced a 'lookupCode' ('lookupCode') which isn't declared", violation.getMessage());
+        assertEquals("attributes[0].attributes[0].lookupCode", violation.getPropertyPath().toString());
     }
 
     @Test
@@ -276,6 +358,48 @@ public class ConfigValidatorTest {
     }
 
     @Test
+    @DisplayName("Valid Nested Composite Type Config")
+    public void validNestedCompositeTypeConfig() {
+        final Config config = Config.builder()
+                .attributes(Set.of(
+                        Attribute.builder()
+                                .code("code")
+                                .label("label")
+                                .type(Type.COMPOSITE)
+                                .compositeCode("compositeCode")
+                                .build()
+                ))
+                .compositeTypeConfigs(Set.of(
+                        CompositeTypeConfig.builder()
+                                .code("compositeCode")
+                                .attributes(Set.of(
+                                        Attribute.builder()
+                                                .code("fieldA")
+                                                .label("Field A")
+                                                .type(Type.COMPOSITE)
+                                                .compositeCode("compositeCode2")
+                                                .build()
+                                ))
+                                .build(),
+                        CompositeTypeConfig.builder()
+                                .code("compositeCode2")
+                                .attributes(Set.of(
+                                        Attribute.builder()
+                                                .code("field1")
+                                                .label("Field 1")
+                                                .type(Type.STRING)
+                                                .build()
+                                ))
+                                .build()
+                ))
+                .build();
+
+        final Set<ConstraintViolation<Config>> violations = validator.validate(config);
+
+        assertEquals(0, violations.size());
+    }
+
+    @Test
     @DisplayName("Invalid Attribute Composite Code Reference")
     public void invalidAttributeCompositeCodeReference() {
         final Config config = Config.builder()
@@ -295,6 +419,41 @@ public class ConfigValidatorTest {
         final ConstraintViolation<Config> violation = violations.iterator().next();
         assertEquals("attribute referenced a 'compositeCode' ('compositeCode') which isn't declared", violation.getMessage());
         assertEquals("attributes[0].compositeCode", violation.getPropertyPath().toString());
+    }
+
+    @Test
+    @DisplayName("Invalid Nested Attribute Composite Code Reference")
+    public void invalidNestedAttributeCompositeCodeReference() {
+        final Config config = Config.builder()
+                .attributes(Set.of(
+                        Attribute.builder()
+                                .code("code")
+                                .label("label")
+                                .type(Type.COMPOSITE)
+                                .compositeCode("compositeCode")
+                                .build()
+                ))
+                .compositeTypeConfigs(Set.of(
+                        CompositeTypeConfig.builder()
+                                .code("compositeCode")
+                                .attributes(Set.of(
+                                        Attribute.builder()
+                                                .code("cCode")
+                                                .label("cLabel")
+                                                .type(Type.COMPOSITE)
+                                                .compositeCode("unknown")
+                                                .build()
+                                ))
+                                .build()
+                ))
+                .build();
+
+        final Set<ConstraintViolation<Config>> violations = validator.validate(config);
+
+        assertEquals(1, violations.size());
+        final ConstraintViolation<Config> violation = violations.iterator().next();
+        assertEquals("attribute referenced a 'compositeCode' ('unknown') which isn't declared", violation.getMessage());
+        assertEquals("attributes[0].attributes[0].compositeCode", violation.getPropertyPath().toString());
     }
 
     @Test

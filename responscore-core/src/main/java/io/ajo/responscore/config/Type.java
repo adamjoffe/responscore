@@ -6,6 +6,7 @@ import io.ajo.responscore.util.ObjectMapperUtils;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -81,9 +82,21 @@ public enum Type {
         return false;
     }
 
-    @SuppressWarnings("unchecked")
-    public <T> T coerceType(Object value) throws IllegalArgumentException {
-        return (T) OBJECT_MAPPER.convertValue(value, typeReference);
+    public <T> T coerceType(Object value, boolean list) throws IllegalArgumentException {
+        if (list) {
+            return OBJECT_MAPPER.convertValue(
+                    value,
+                    OBJECT_MAPPER.getTypeFactory().constructCollectionType(
+                            Collection.class,
+                            OBJECT_MAPPER.constructType(typeReference)
+                    )
+            );
+        } else {
+            return OBJECT_MAPPER.convertValue(
+                    value,
+                    OBJECT_MAPPER.constructType(typeReference)
+            );
+        }
     }
 
     public static Optional<Type> getTypeForJavaType(Class<?> clz) {

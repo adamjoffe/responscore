@@ -4,12 +4,11 @@ import io.ajo.responscore.config.Attribute;
 import io.ajo.responscore.config.Type;
 import io.ajo.responscore.config.Validator;
 import io.ajo.responscore.config.validation.annotation.ValidAttribute;
+import io.ajo.responscore.validation.ConstraintViolationBuilder;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
-
-import static io.ajo.responscore.util.ValidationUtils.addMessageParameter;
 
 /**
  * Validates the {@link Attribute} to ensure fields are set correctly, checks:
@@ -31,76 +30,66 @@ public class AttributeValidator implements ConstraintValidator<ValidAttribute, A
             return valid;
         }
         if (value.getType().extendsType(Type.LOOKUP) && StringUtils.isEmpty(value.getLookupCode())) {
-            ctx.disableDefaultConstraintViolation();
-            ctx.buildConstraintViolationWithTemplate("{responscore.validation.attribute_validator.no_lookup_code}")
+            ConstraintViolationBuilder.builder(ctx)
                     .addPropertyNode("lookupCode")
-                    .addConstraintViolation();
+                    .build("{responscore.validation.attribute_validator.no_lookup_code}");
             valid = false;
         }
         if (!StringUtils.isEmpty(value.getLookupCode()) && !value.getType().extendsType(Type.LOOKUP)) {
-            ctx.disableDefaultConstraintViolation();
-            ctx.buildConstraintViolationWithTemplate("{responscore.validation.attribute_validator.not_lookup_type}")
+            ConstraintViolationBuilder.builder(ctx)
                     .addPropertyNode("type")
-                    .addConstraintViolation();
+                    .build("{responscore.validation.attribute_validator.not_lookup_type}");
             valid = false;
         }
         if (value.getType().extendsType(Type.COMPOSITE) && StringUtils.isEmpty(value.getCompositeCode())) {
-            ctx.disableDefaultConstraintViolation();
-            ctx.buildConstraintViolationWithTemplate("{responscore.validation.attribute_validator.no_composite_code}")
+            ConstraintViolationBuilder.builder(ctx)
                     .addPropertyNode("compositeCode")
-                    .addConstraintViolation();
+                    .build("{responscore.validation.attribute_validator.no_composite_code}");
             valid = false;
         }
         if (!StringUtils.isEmpty(value.getCompositeCode()) && !value.getType().extendsType(Type.COMPOSITE)) {
-            ctx.disableDefaultConstraintViolation();
-            ctx.buildConstraintViolationWithTemplate("{responscore.validation.attribute_validator.not_composite_type}")
+            ConstraintViolationBuilder.builder(ctx)
                     .addPropertyNode("type")
-                    .addConstraintViolation();
+                    .build("{responscore.validation.attribute_validator.not_composite_type}");
             valid = false;
         }
         if (!value.getValidateItems().isEmpty() && !value.isList()) {
-            ctx.disableDefaultConstraintViolation();
-            ctx.buildConstraintViolationWithTemplate("{responscore.validation.attribute_validator.validate_items_not_list}")
+            ConstraintViolationBuilder.builder(ctx)
                     .addPropertyNode("list")
-                    .addConstraintViolation();
+                    .build("{responscore.validation.attribute_validator.validate_items_not_list}");
             valid = false;
         }
         for (int i = 0; i < value.getValidators().size(); i++) {
             final Validator validator = value.getValidators().get(i);
             if (!StringUtils.isEmpty(validator.getField()) && !value.getType().extendsType(Type.COMPOSITE)) {
-                ctx.disableDefaultConstraintViolation();
-                ctx.buildConstraintViolationWithTemplate("{responscore.validation.attribute_validator.validator_field_ref_not_composite}")
+                ConstraintViolationBuilder.builder(ctx)
                         .addPropertyNode("validators")
-                        .addPropertyNode(null)
-                        .inIterable().atIndex(i)
+                        .addIterableNode(i)
                         .addPropertyNode("field")
-                        .addConstraintViolation();
+                        .build("{responscore.validation.attribute_validator.validator_field_ref_not_composite}");
                 valid = false;
             }
         }
         for (int i = 0; i < value.getValidateItems().size(); i++) {
             final Validator validator = value.getValidateItems().get(i);
             if (!StringUtils.isEmpty(validator.getField()) && !value.getType().extendsType(Type.COMPOSITE)) {
-                ctx.disableDefaultConstraintViolation();
-                ctx.buildConstraintViolationWithTemplate("{responscore.validation.attribute_validator.validate_items_field_ref_not_composite}")
+                ConstraintViolationBuilder.builder(ctx)
                         .addPropertyNode("validateItems")
-                        .addPropertyNode(null)
-                        .inIterable().atIndex(i)
+                        .addIterableNode(i)
                         .addPropertyNode("field")
-                        .addConstraintViolation();
+                        .build("{responscore.validation.attribute_validator.validate_items_field_ref_not_composite}");
                 valid = false;
             }
         }
         if (value.getDefaultValue() != null) {
             try {
-                value.getType().coerceType(value.getDefaultValue());
+                value.getType().coerceType(value.getDefaultValue(), value.isList());
             } catch (IllegalArgumentException ignore) {
-                ctx.disableDefaultConstraintViolation();
-                addMessageParameter(ctx, "defaultValue", value.getDefaultValue().toString());
-                addMessageParameter(ctx, "type", value.getType().name());
-                ctx.buildConstraintViolationWithTemplate("{responscore.validation.attribute_validator.incorrect_default_value_type}")
+                ConstraintViolationBuilder.builder(ctx)
                         .addPropertyNode("default")
-                        .addConstraintViolation();
+                        .addMessageParameter("defaultValue", value.getDefaultValue().toString())
+                        .addMessageParameter("type", value.getType().name())
+                        .build("{responscore.validation.attribute_validator.incorrect_default_value_type}");
                 valid = false;
             }
         }

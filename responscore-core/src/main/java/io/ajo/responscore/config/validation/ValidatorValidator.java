@@ -4,11 +4,10 @@ package io.ajo.responscore.config.validation;
 import io.ajo.responscore.config.Validator;
 import io.ajo.responscore.config.ValidatorType;
 import io.ajo.responscore.config.validation.annotation.ValidValidator;
+import io.ajo.responscore.validation.ConstraintViolationBuilder;
 
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
-
-import static io.ajo.responscore.util.ValidationUtils.addMessageParameter;
 
 /**
  * Validates the {@link Validator} to ensure fields are set correctly based on the {@link ValidatorType} used.
@@ -27,21 +26,19 @@ public class ValidatorValidator implements ConstraintValidator<ValidValidator, V
         switch (value.getType()) {
             case Min, Max, GreaterThan, LessThan, MinSize, MaxSize -> {
                 if (value.getValue() == null) {
-                    ctx.disableDefaultConstraintViolation();
-                    addMessageParameter(ctx, "type", value.getType().name());
-                    ctx.buildConstraintViolationWithTemplate("{responscore.validation.validator_validator.no_value}")
+                    ConstraintViolationBuilder.builder(ctx)
                             .addPropertyNode("value")
-                            .addConstraintViolation();
+                            .addMessageParameter("type", value.getType().name())
+                            .build("{responscore.validation.validator_validator.no_value}");
                     return false;
                 }
             }
             default -> {
                 if (value.getValue() != null) {
-                    ctx.disableDefaultConstraintViolation();
-                    addMessageParameter(ctx, "type", value.getType().name());
-                    ctx.buildConstraintViolationWithTemplate("{responscore.validation.validator_validator.value_set}")
+                    ConstraintViolationBuilder.builder(ctx)
                             .addPropertyNode("value")
-                            .addConstraintViolation();
+                            .addMessageParameter("type", value.getType().name())
+                            .build("{responscore.validation.validator_validator.value_set}");
                     return false;
                 }
             }
