@@ -1,6 +1,6 @@
 package io.ajo.responscore.service.validation.annotation;
 
-import io.ajo.responscore.service.FormService;
+import io.ajo.responscore.service.validation.FormValidator;
 
 import javax.validation.Constraint;
 import javax.validation.Payload;
@@ -13,7 +13,7 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Constraint(validatedBy = FormService.class)
+@Constraint(validatedBy = FormValidator.class)
 public @interface ValidForm {
 
     String message() default "{responscore.validation.form_validator.default}";
